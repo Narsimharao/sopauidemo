@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<con:soapui-project id="fb948414-c52a-4792-975f-a55a78a15158" activeEnvironment="Default" name="DemoRESTApi" resourceRoot="" soapui-version="5.4.0" abortOnError="false" runType="SEQUENTIAL" xmlns:con="http://eviware.com/soapui/config"><con:settings/><con:interface xsi:type="con:RestService" id="c889e8b8-e86c-4070-af5c-4576b7bda86b" wadlVersion="http://wadl.dev.java.net/2009/02" name="http://localhost:8092" type="rest" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><con:settings/><con:definitionCache type="TEXT" rootPart=""/><con:endpoints><con:endpoint>http://localhost:8092</con:endpoint></con:endpoints><con:resource name="" path="/pet/findByStatus" id="ca763ee8-a930-494d-a0c2-6d4ceae3d4d5"><con:settings/><con:parameters><con:parameter><con:name>status</con:name><con:value/><con:style>QUERY</con:style><con:default/><con:description xsi:nil="true"/></con:parameter></con:parameters><con:method name="FindStatus" id="514f200b-c716-473b-b9c4-90248c95a332" method="GET"><con:settings/><con:parameters/><con:representation type="RESPONSE"><con:mediaType xsi:nil="true"/><con:status>0</con:status><con:params/><con:element>data</con:element></con:representation><con:representation type="RESPONSE"><con:mediaType xsi:nil="true"/><con:status>0</con:status><con:params/><con:element>data</con:element></con:representation><con:representation type="RESPONSE"><con:mediaType xsi:nil="true"/><con:status>0</con:status><con:params/><con:element>data</con:element></con:representation><con:representation type="RESPONSE"><con:mediaType>application/json</con:mediaType><con:status>200</con:status><con:params/><con:element>Response</con:element></con:representation><con:representation type="RESPONSE"><con:mediaType>text/html; charset=iso-8859-1</con:mediaType><con:status>200</con:status><con:params/><con:element>html</con:element></con:representation><con:representation type="FAULT"><con:mediaType>application/xml</con:mediaType><con:status>400 404</con:status><con:params/></con:representation><con:representation type="RESPONSE"><con:mediaType xsi:nil="true"/><con:status>0</con:status><con:params/><con:element>data</con:element></con:representation><con:request name="Request 1" id="9bfde3d6-c90d-4d91-b9b6-f384b172bae1" mediaType="application/json"><con:settings><con:setting id="com.eviware.soapui.impl.wsdl.WsdlRequest@request-headers">&lt;xml-fragment/></con:setting></con:settings><con:endpoint>http://localhost:8092</con:endpoint><con:request/><con:originalUri>http://localhost/pet/findByStatus</con:originalUri><con:credentials><con:authType>No Authorization</con:authType></con:credentials><con:jmsConfig JMSDeliveryMode="PERSISTENT"/><con:jmsPropertyConfig/><con:parameters><entry key="status" value="available" xmlns="http://eviware.com/soapui/config"/></con:parameters><con:parameterOrder><con:entry>status</con:entry></con:parameterOrder></con:request></con:method></con:resource></con:interface><con:testSuite id="897ae72a-b0d4-4f8f-ada1-77d97bcc6f81" name="TestSuite 1"><con:settings/><con:runType>SEQUENTIAL</con:runType><con:testCase id="9166d2dd-59d3-4ffa-a8c1-b68f2f359670" failOnError="true" failTestCaseOnErrors="true" keepSession="false" maxResults="0" name="TestCase 1" searchProperties="true"><con:settings/><con:testStep type="groovy" name="GroovyScript" id="ef2abc1a-fdd1-415b-822d-304fa52c8103"><con:settings/><con:config><script>import jxl.*
+import groovy.json.JsonSlurper
+
+def groovyUtils = new com.eviware.soapui.support.GroovyUtils(context)
+
+def filePath=groovyUtils.projectPath + "//datadriven.xls"
+
+//log.info(filePath)
+
+Workbook workbook = Workbook.getWorkbook(new File(filePath))
+
+Sheet sheet1 = workbook.getSheet("DataDriven")
+
+def rows = sheet1.getRows()
+
+for(i=1;i&lt;rows;i++) {
+
+    def c1 = sheet1.getCell(0, i)
+
+    def inputParam=c1.getContents()
+
+    testRunner.testCase.setPropertyValue("status",inputParam)
+
+    testRunner.runTestStepByName("FindStatus")
+
+    def response= testRunner.testCase.getTestStepByName("FindStatus").getPropertyValue("response")
+
+    def httpResponseHeaders = context.testCase.testSteps["FindStatus"].testRequest.response.responseHeaders
+    def httpStatus = httpResponseHeaders["#status#"]
+    def httpStatusCode = Integer.parseInt((httpStatus =~ "[1-5]\\d\\d")[0])
+
+    log.info("HTTP status code: " + httpStatusCode)
+
+    try{
+        jsonSlurper = new JsonSlurper()
+        jsonObject = jsonSlurper.parseText(response)
+    }
+    catch(Exception e){
+        jsonObject=null
+    }
+
+    if(inputParam.toString() =="available" )
+    {
+        log.info(httpStatusCode)
+        assert httpStatusCode==200
+        assert jsonObject[0].status==inputParam
+    }
+    else if( inputParam==("pending") )
+    {
+        log.info(httpStatusCode)
+        assert httpStatusCode==200
+        assert jsonObject[0].status==inputParam
+    }
+    else if( inputParam==("sold"))
+    {
+        log.info(httpStatusCode)
+        assert httpStatusCode==200
+        assert jsonObject[0].status==inputParam
+    }
+    else if( inputParam==("notfound") )
+    {
+        log.info(httpStatusCode)
+        assert httpStatusCode==404
+    }
+    else
+    {
+        log.info(httpStatusCode)
+        assert httpStatusCode==400
+    }
+
+}</script></con:config></con:testStep><con:testStep type="restrequest" name="FindStatus" id="fa42bbd1-bbb5-4d11-bc3c-4edee3e19e21"><con:settings/><con:config service="http://localhost:8092" resourcePath="/pet/findByStatus" methodName="FindStatus" xsi:type="con:RestRequestStep" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><con:restRequest name="FindStatus" id="9bfde3d6-c90d-4d91-b9b6-f384b172bae1" mediaType="application/json"><con:settings><con:setting id="com.eviware.soapui.impl.wsdl.WsdlRequest@request-headers">&lt;xml-fragment/></con:setting></con:settings><con:endpoint>http://localhost:8092</con:endpoint><con:request/><con:originalUri>http://localhost/pet/findByStatus</con:originalUri><con:credentials><con:authType>No Authorization</con:authType></con:credentials><con:jmsConfig JMSDeliveryMode="PERSISTENT"/><con:jmsPropertyConfig/><con:parameters><entry key="status" value="${#TestCase#status}" xmlns="http://eviware.com/soapui/config"/></con:parameters><con:parameterOrder><con:entry>status</con:entry></con:parameterOrder></con:restRequest></con:config></con:testStep><con:properties><con:property><con:name>status</con:name><con:value>xyz</con:value></con:property></con:properties></con:testCase><con:properties/></con:testSuite><con:restMockService id="546ebe61-11ff-41c3-b0d4-c5c26be8a520" port="8092" path="/" host="localhost" name="REST MockService 1" docroot=""><con:settings/><con:properties/><con:restMockAction name="/pet/findByStatus" method="GET" resourcePath="/pet/findByStatus" id="986ca48a-6e53-4383-8bf6-6a57764fc967"><con:settings/><con:defaultResponse>badrequest</con:defaultResponse><con:dispatchStyle>SCRIPT</con:dispatchStyle><con:dispatchPath>def listOfParams =["available","sold","pending","badrequest","notfound"]
+
+def queryString = mockRequest.getRequest().getQueryString()
+log.info "QueryString: " + queryString
+
+if( queryString.contains("available") )
+{
+    return "available"
+}
+else if( queryString.contains("pending") )
+{
+    return "pending"
+}
+else if( queryString.contains("sold"))
+{
+    return "sold"
+}
+else if( queryString.contains("notfound") )
+{
+    return "notfound"
+}
+else if(!listOfParams.contains(queryString))
+{
+    return "badrequest"
+}</con:dispatchPath><con:response name="available" id="fb0d5c8e-e8c8-4bf8-a803-87e1ca0bace5" httpResponseStatus="200" mediaType="application/json"><con:settings/><con:responseContent>[
+      {
+      "id": 93245987008955835,
+      "category":       {
+         "id": 0,
+         "name": "string"
+      },
+      "name": "bedba_128",
+      "photoUrls": ["string"],
+      "tags": [      {
+         "id": 0,
+         "name": "string"
+      }],
+      "status": "available"
+   },
+      {
+      "id": 93245987008955836,
+      "category":       {
+         "id": 0,
+         "name": "string"
+      },
+      "name": "dbdcd_130",
+      "photoUrls": ["string"],
+      "tags": [      {
+         "id": 0,
+         "name": "string"
+      }],
+      "status": "available"
+   }
+]</con:responseContent></con:response><con:response name="pending" id="ed780a8a-650f-44ec-ac1b-9e8a4753afb2" httpResponseStatus="200" mediaType="application/json"><con:settings/><con:responseContent>[
+      {
+      "id": 168,
+      "category":       {
+         "id": 772,
+         "name": "3oFdveH8tnXXDkIF"
+      },
+      "name": "doggie",
+      "photoUrls": ["Hf6endV4e6Cy55lv"],
+      "tags": [      {
+         "id": 417,
+         "name": "5iF-1B7vgO7xDGCn' AND SLEEP(4)=0 LIMIT 1 # "
+      }],
+      "status": "pending"
+   },
+      {
+      "id": 84,
+      "category":       {
+         "id": 459,
+         "name": "nfUXux50W53a3GxK"
+      },
+      "name": "doggie",
+      "photoUrls": ["67r7EcCX9ymyIkpL"],
+      "tags": [      {
+         "id": 641,
+         "name": "F-jFVxOQgFjAY58p"
+      }],
+      "status": "pending"
+   }
+]</con:responseContent></con:response><con:response name="sold" id="8c2a5ed1-fe50-4110-a964-573b4782dbd6" httpResponseStatus="200" mediaType="application/json"><con:settings/><con:responseContent>[
+      {
+      "id": 165,
+      "category":       {
+         "id": 579,
+         "name": "_6Hx9dJuD9flySZZ"
+      },
+      "name": "doggie",
+      "photoUrls": ["4LBLzLhki3QlSQpx"],
+      "tags": [      {
+         "id": 407,
+         "name": "4tNOWp_53BQdi_Ea') OR SLEEP(8)=0 LIMIT 1 -- "
+      }],
+      "status": "sold"
+   },
+      {
+      "id": 194,
+      "category":       {
+         "id": 873,
+         "name": "GF2ttfWtbVlEviNu"
+      },
+      "name": "doggie",
+      "photoUrls": ["foAFXPUDxVORM3bu"],
+      "tags": [      {
+         "id": 853,
+         "name": "GGpxHYBAgHQqqlB1&amp;&amp; sleep 4"
+      }],
+      "status": "sold"
+   }
+]</con:responseContent></con:response><con:response name="badrequest" id="7bc2834e-6212-4077-a44e-c73f5cc7b41f" httpResponseStatus="400"><con:settings/><con:responseContent/></con:response><con:response name="notfound" id="255b53d6-d36f-4aae-8ec8-38aee3035f15" httpResponseStatus="404"><con:settings/><con:responseContent/></con:response></con:restMockAction></con:restMockService><con:properties/><con:wssContainer/><con:oAuth2ProfileContainer/><con:oAuth1ProfileContainer/><con:sensitiveInformation/></con:soapui-project>
